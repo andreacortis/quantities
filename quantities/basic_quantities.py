@@ -6,7 +6,7 @@ import numbers
 from uncertainties import ufloat
 import uncertainties
 from pint import UnitRegistry, DimensionalityError
-ureg = UnitRegistry(non_int_type=Decimal)
+ureg = UnitRegistry()
 ureg.default_format = "~P"
 Q_=ureg.Quantity
 from interval import interval, inf, imath
@@ -18,12 +18,14 @@ class Limits:
         lower, upper = limits
         try:
             assert lower.dimensionality == upper.dimensionality
-            if not isinstance(lower.m, Decimal):
-                assert lower.m.std_dev == 0
-            if not isinstance(upper.m, Decimal):
-                assert upper.m.std_dev == 0
         except DimensionalityError as exc:
             raise exc
+        try:
+            assert isinstance(lower.m, numbers.Number)
+            assert isinstance(upper.m, numbers.Number)
+        except AssertionError as e:
+            print('lower and upper limits must be integer of floats')
+            raise e
         lower.ito_base_units()
         upper.ito_base_units()
         self.value = interval([lower.m, upper.m])
@@ -44,10 +46,23 @@ class Limits:
         elif isinstance(other, Limits):
             return self.value/other.value
         
+    def __str__(self):
+        h = [(x[0].inf,x[0].sup) for x in self.value.components]
+        h = "&".join([f"{x}\, — {y}" for x,y in h])
+        return h + '\\, '+ self.units.__str__()
+    
     def __repr__(self):
-        return self.value.__str__() + self.units.__str__()
+        s = f"$${self.__str__()}$$"
+        display(Latex(s))
+        return ""    
 
+@typechecked
+def __zeta__(x1:ufloat, x2:ufloat) -> bool:
+    z = abs(x1.n -x2.n)/(x1.s**2 + x2.s**2)**0.5
+    return z < 2.0 
+    
 class BasicQuantity:
+    __significant_digits__ = 3
     units = '1'
     class_units = Q_(f"{units}")
     def __init__(self, name="", **kwargs):
@@ -55,7 +70,7 @@ class BasicQuantity:
         c2 = set(kwargs.keys()) == {'quantity'}
         c3 = set(kwargs.keys()) == {'limits'}
         self.name = name
-        
+
         assert c1 ^ c2 ^ c3
         if c1:
             magnitude = kwargs['magnitude']
@@ -72,6 +87,22 @@ class BasicQuantity:
         if c3:
             limits = kwargs['limits']
             self.value = limits 
+        
+        if c1^c2:
+            try:
+                assert self.class_units.dimensionality == self.value.dimensionality
+            except AssertionError:
+                raise DimensionalityError(self.class_units.units, self.value.units)
+
+    def __eq__(self, other):
+        try:
+            x = self.value.to_base_units()
+            y = other.value.to_base_units()
+            assert x.units == y.units
+            assert __zeta__(x.m, y.m)
+            return True
+        except:
+            return False
 
     def __add__(self,other):
         try:
@@ -104,11 +135,27 @@ class BasicQuantity:
             return self.value/other.value
         
     def __str__(self):
-        if isinstance(self.value, interval):
-            h = self.value.__str__()
+        if isinstance(self.value, Limits):
+            # print('>>> Limits')
+            h = [(x[0].inf,x[0].sup) for x in self.value.value.components]
+            h = "&".join([f"{x}\, — {y}" for x,y in h])
+            h =  h + '\\, '
             u = self.units
-        else:
-            h = self.value.m
+        elif isinstance(self.value, ureg.Quantity):
+            # print('>>> quantity')
+            if isinstance(self.value.m, np.ndarray):
+                print('>>> array')
+                h = list(self.value.m).__str__()
+                h = "["+", ".join([f"{x:.{self.__significant_digits__}u}" for x in self.value.m])+"]"
+            else:
+                # print('>>> scalar', type(self.value.m))
+                if isinstance(self.value.m, numbers.Number):
+                    h = f"{self.value.m:4.{self.__significant_digits__}g}"
+                else:
+                    if self.value.m.std_dev == 0:
+                        h = f"{self.value.m.nominal_value:4.{self.__significant_digits__}g}"
+                    else:
+                        h = f"{self.value.m:4.{self.__significant_digits__}g}"
             u = self.value.units
         s = f"{self.name} = {h} \\, \\rm{{[{u}]}}, \\, \\rm{{({self.__class__.__name__})}}"
         s = s.replace('+/-',r'\pm')
@@ -122,26 +169,26 @@ class BasicQuantity:
 def quantity_maker(klass, units, expression=lambda x:Q_('0')):
     return type(klass,(BasicQuantity,),{"class_units":Q_(units),'units':units ,'expression':expression})
     
-# custom physical quanti    
-Mass = quantity_maker('Mass','kg')
-Time = quantity_maker('Mass','sec')
-Length = quantity_maker('Length','m')
-Area = quantity_maker('Area','m^2')
-Volume = quantity_maker('Volume','m^3')
+# # custom physical quanti    
+# Mass = quantity_maker('Mass','kg')
+# Time = quantity_maker('Mass','sec')
+# Length = quantity_maker('Length','m')
+# Area = quantity_maker('Area','m^2')
+# Volume = quantity_maker('Volume','m^3')
 
-Porosity = quantity_maker('Porosity','m^3/m^3')
+# Porosity = quantity_maker('Porosity','m^3/m^3')
 
-Velocity = quantity_maker('Velocity','m/s')
-@typechecked
-def speed(name:str, l:Length, dt:Time) -> Velocity:
-    name = f'{name} = \\frac{{{l.name}}}{{{dt.name}}}'
-    return Velocity(name = name, quantity = (l/dt))
+# Velocity = quantity_maker('Velocity','m/s')
+# @typechecked
+# def speed(name:str, l:Length, dt:Time) -> Velocity:
+#     name = f'{name} = \\frac{{{l.name}}}{{{dt.name}}}'
+#     return Velocity(name = name, quantity = (l/dt))
 
-Density = quantity_maker('Density','kg/m^3')
-@typechecked
-def density(name:str, m:Mass, v:Volume) -> Density:
-    name = f'{name} = \\frac{{{m.name}}}{{{v.name}}}'
-    return Density(name = name, quantity = (m/v))
+# Density = quantity_maker('Density','kg/m^3')
+# @typechecked
+# def density(name:str, m:Mass, v:Volume) -> Density:
+#     name = f'{name} = \\frac{{{m.name}}}{{{v.name}}}'
+#     return Density(name = name, quantity = (m/v))
 
 if __name__ == '__main__':
     pass
