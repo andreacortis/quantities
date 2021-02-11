@@ -65,6 +65,7 @@ The obvious disadvantage is that we are in a land where dimensional analysis doe
 
 One way of understanding this nonsense is trying to unpack and reconstruct the way the correlation was built
 
+
 $$
 \kappa = 1.91^{\rho}
 

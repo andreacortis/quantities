@@ -13,8 +13,9 @@ from interval import interval, inf, imath
 
 esc = lambda s: s.replace('"\"','"\\"')
 
+@typechecked
 class Limits:
-    def __init__(self, limits):
+    def __init__(self, limits:(tuple, interval)):
         lower, upper = limits
         try:
             assert lower.dimensionality == upper.dimensionality
@@ -33,19 +34,22 @@ class Limits:
     
     def __mul__(self,other):
         if isinstance(other, numbers.Number):
-            return self.value*other
+            return self.__create_from_interval__(self.value*other)
         elif isinstance(other, Limits):
-            return self.value*other.value
+            return self.__create_from_interval__(self.value*other.value)
 
     def __rmul__(self,other):
-        return self.__mul__(other)
+        return self.__create_from_interval__(self.__mul__(other))
     
     def __truediv__(self,other):
         if isinstance(other, numbers.Number):
-            return self.value/other
+            return self.__create_from_interval__(self.value/other)
         elif isinstance(other, Limits):
-            return self.value/other.value
-        
+            return self.__create_from_interval__(self.value/other.value)
+
+    def __create_from_interval__(self, I):
+        return Limits((Q_(I[0][0],self.units),Q_(I[0][1],self.units)))
+
     def __str__(self):
         h = [(x[0].inf,x[0].sup) for x in self.value.components]
         h = "&".join([f"{x}\, — {y}" for x,y in h])
@@ -68,10 +72,9 @@ class BasicQuantity:
     def __init__(self, name="", **kwargs):
         c1 = set(kwargs.keys()) == {'magnitude','units'}
         c2 = set(kwargs.keys()) == {'quantity'}
-        c3 = set(kwargs.keys()) == {'limits'}
         self.name = name
 
-        assert c1 ^ c2 ^ c3
+        assert c1 ^ c2
         if c1:
             magnitude = kwargs['magnitude']
             units = kwargs['units']
@@ -84,13 +87,10 @@ class BasicQuantity:
         if c2:
             quantity = kwargs['quantity']
             self.value = quantity          
-        if c3:
-            limits = kwargs['limits']
-            self.value = limits 
-        
+
         if c1^c2:
             try:
-                assert self.class_units.dimensionality == self.value.dimensionality
+                assert self.class_units.dimensionality == Q_(1,self.units).dimensionality
             except AssertionError:
                 raise DimensionalityError(self.class_units.units, self.value.units)
 
@@ -135,6 +135,8 @@ class BasicQuantity:
             return self.value/other.value
         
     def __str__(self):
+        # print('--- DEBUGGING')
+        # print(type(self.value))
         if isinstance(self.value, Limits):
             # print('>>> Limits')
             h = [(x[0].inf,x[0].sup) for x in self.value.value.components]
@@ -144,7 +146,7 @@ class BasicQuantity:
         elif isinstance(self.value, ureg.Quantity):
             # print('>>> quantity')
             if isinstance(self.value.m, np.ndarray):
-                print('>>> array')
+                # print('>>> array')
                 h = list(self.value.m).__str__()
                 h = "["+", ".join([f"{x:.{self.__significant_digits__}u}" for x in self.value.m])+"]"
             else:
