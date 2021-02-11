@@ -1,6 +1,5 @@
 import numpy as np
 from typeguard import typechecked
-from decimal import Decimal
 from IPython.display import display, Latex
 import numbers
 from uncertainties import ufloat
@@ -15,7 +14,8 @@ esc = lambda s: s.replace('"\"','"\\"')
 
 @typechecked
 class Limits:
-    def __init__(self, limits:(tuple, interval)):
+    def __init__(self, limits:(tuple,list)):
+        assert len(limits)==2
         lower, upper = limits
         try:
             assert lower.dimensionality == upper.dimensionality
@@ -65,7 +65,7 @@ def __zeta__(x1:ufloat, x2:ufloat) -> bool:
     z = abs(x1.n -x2.n)/(x1.s**2 + x2.s**2)**0.5
     return z < 2.0 
     
-class BasicQuantity:
+class BaseQuantity:
     __significant_digits__ = 3
     units = '1'
     class_units = Q_(f"{units}")
@@ -119,7 +119,7 @@ class BasicQuantity:
     def __mul__(self,other):
         if isinstance(other, numbers.Number):
             return self.value*other
-        elif isinstance(other, BasicQuantity):
+        elif isinstance(other, BaseQuantity):
             return self.value*other.value
 
     def __rmul__(self,other):
@@ -131,7 +131,7 @@ class BasicQuantity:
     def __truediv__(self,other):
         if isinstance(other, numbers.Number):
             return self.value/other
-        elif isinstance(other, BasicQuantity):
+        elif isinstance(other, BaseQuantity):
             return self.value/other.value
         
     def __str__(self):
@@ -169,28 +169,7 @@ class BasicQuantity:
         return ""
 
 def quantity_maker(klass, units, expression=lambda x:Q_('0')):
-    return type(klass,(BasicQuantity,),{"class_units":Q_(units),'units':units ,'expression':expression})
-    
-# # custom physical quanti    
-# Mass = quantity_maker('Mass','kg')
-# Time = quantity_maker('Mass','sec')
-# Length = quantity_maker('Length','m')
-# Area = quantity_maker('Area','m^2')
-# Volume = quantity_maker('Volume','m^3')
-
-# Porosity = quantity_maker('Porosity','m^3/m^3')
-
-# Velocity = quantity_maker('Velocity','m/s')
-# @typechecked
-# def speed(name:str, l:Length, dt:Time) -> Velocity:
-#     name = f'{name} = \\frac{{{l.name}}}{{{dt.name}}}'
-#     return Velocity(name = name, quantity = (l/dt))
-
-# Density = quantity_maker('Density','kg/m^3')
-# @typechecked
-# def density(name:str, m:Mass, v:Volume) -> Density:
-#     name = f'{name} = \\frac{{{m.name}}}{{{v.name}}}'
-#     return Density(name = name, quantity = (m/v))
+    return type(klass,(BaseQuantity,),{"class_units":Q_(units),'units':units ,'expression':expression})
 
 if __name__ == '__main__':
     pass

@@ -22,9 +22,11 @@ def load_requirements(fname):
     return [str(requirement.requirement) for requirement in requirements]
 
 if __name__ == '__main__':
-    setup(name='quantities',
+    setup(name='SemanticQuantities',
           version='0.1.0',
-          description='A package that provides class and utilities for Quantitative Inetrpretation',
+          description="""
+          A package that provides classes and utilities dealing with physical quantities, their units, uncertainty and bounds.
+          """,
           url='https://andreacortis@bitbucket.org/neoncatdb/qi_project.git',
           author='Andrea Cortis',
           author_email='andrea.cortis@gmail.com',
