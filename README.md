@@ -56,8 +56,11 @@ DimensionalityError: Cannot convert from 'gram / centimeter ** 3' to 'dimensionl
 ```
 
 Same story ... you simply cannot do that. The understanding in all these relationships is that you need:
+
     1. first to convert the density measurement in units of g/cm^3, 
+
     2. take the magnitude of that physical value, which turns out to be equal to $2.31$, 
+    
     3. raise the number $1.91$ to the power of $2.31$
 
 ```
@@ -69,17 +72,15 @@ The obvious disadvantage is that we are in a land where dimensional analysis doe
 
 One way of understanding this nonsense is trying to unpack and reconstruct the way the correlation was built
 
-$$
-\kappa = 1.91^{\rho}
+$$\kappa = 1.91^{\rho}$$
 
-\ln \kappa = \rho \ln 1.91
+$$\ln \kappa = \rho \ln 1.91$$
 
-\ln \kappa = 0.647 \rho 
+$$\ln \kappa = 0.647 \rho $$
 
-\kappa = exp(0.647 \rho)
+$$\kappa = exp(0.647 \rho)$$
 
-\kappa = exp( \rho / 1.5455)
-$$
+$$\kappa = exp( \rho / 1.5455)$$
 
 which shows a linear relation between the density (measured in g/cm^3) and the logarithm of the permittivity.
 But this simply implies that, as it was originally stipulated that $\rho$ must have units of $g/cm^3$ then also coefficient $1.5455$ needs to be a physical quantity with units of $g/cm^3$: it is simply reference density!!!!. 
@@ -153,14 +154,8 @@ In [11]: print(v)
 
 l0 = Length(name='v_0', limits=Limits([Q_('3.21 m^3'),Q_('3.6 m^3')]))
 
-
 ```
 
-
-
 I have not open sourced the repo yet because I am just tasting the waters: if there is an interest in using my package as the foundation for the units (rather than just relying on `pint` as it seems to be right now), I would be more than happy to publish it on github under the most permissive licence (right now I am thinking of MIT, but suggestions are welcome.)
-
-
-
 
 I have not open sourced the repo yet because I am just tasting the waters: if there is an interest in using my package as the foundation for the units (rather than just relying on pint as it seems to be right now), I would be more than happy to publish it on github under the most permissive licence (right now I am thinking of MIT, but suggestions are welcome.)
