@@ -52,7 +52,7 @@ class Limits:
 
     def __str__(self):
         h = [(x[0].inf,x[0].sup) for x in self.value.components]
-        h = "&".join([f"{x}\, — {y}" for x,y in h])
+        h = "&".join([rf"{x}\, — {y}" for x,y in h])
         return h + '\\, '+ self.units.__str__()
     
     def __repr__(self):
@@ -140,7 +140,7 @@ class BaseQuantity:
         if isinstance(self.value, Limits):
             # print('>>> Limits')
             h = [(x[0].inf,x[0].sup) for x in self.value.value.components]
-            h = "&".join([f"{x}\, — {y}" for x,y in h])
+            h = "&".join([rf"{x}\, — {y}" for x,y in h])
             h =  h + '\\, '
             u = self.units
         elif isinstance(self.value, ureg.Quantity):
