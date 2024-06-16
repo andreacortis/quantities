@@ -70,17 +70,15 @@ The obvious disadvantage is that we are in a land where dimensional analysis doe
 One way of understanding this nonsense is trying to unpack and reconstruct the way the correlation was built
 
 
-$$
-\kappa = 1.91^{\rho}
+$$\kappa = 1.91^{\rho}$$
 
-\ln \kappa = \rho \ln 1.91
+$$\ln \kappa = \rho \ln 1.91$$
 
-\ln \kappa = 0.647 \rho 
+$$\ln \kappa = 0.647 \rho$$ 
 
-\kappa = exp(0.647 \rho)
+$$\kappa = exp(0.647 \rho)$$
 
-\kappa = exp( \rho / 1.5455)
-$$
+$$\kappa = exp( \rho / 1.5455)$$
 
 which shows a linear relation between the density (measured in g/cm^3) and the logarithm of the permittivity.
 But this simply implies that, as it was originally stipulated that $\rho$ must have units of $g/cm^3$ then also coefficient $1.5455$ needs to be a physical quantity with units of $g/cm^3$: it is simply reference density!!!!. 
